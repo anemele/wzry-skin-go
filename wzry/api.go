@@ -25,7 +25,7 @@ func download(heros []Hero) {
 
 		heroPageUrl := getPageUrl(hero.ename)
 		pageBytes := getBytes(heroPageUrl)
-		html := convertGbkToUtf8(pageBytes)
+		html := ConvertBytes_from_GBK_to_UTF8(pageBytes)
 		skins := parseHtml(html)
 		skinList := splitSkin(skins)
 		skinList = skinList[:len(skinList)-1]

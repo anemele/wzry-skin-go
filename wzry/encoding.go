@@ -1,29 +1,51 @@
 package wzry
 
+/* 与编码相关的函数
+HTTP 请求的结果是字节流，错误的编码会导致乱码，无法解析数据。
+主要是 utf-8 和 gbk 之间的转换。 */
+
 import "golang.org/x/text/encoding/simplifiedchinese"
 
-// func ConvertStr2GBK(str string) string {
-// 	//将utf-8编码的字符串转换为GBK编码
-// 	ret, err := simplifiedchinese.GBK.NewEncoder().String(str)
-// 	return ret //如果转换失败返回空字符串
+/* func ConvertString_from_UTF8_to_GBK(str string) string {
 
-// 	//如果是[]byte格式的字符串，可以使用Bytes方法
-// 	b, err := simplifiedchinese.GBK.NewEncoder().Bytes([]byte(str))
-// 	return string(b)
+	//utf-8编码的字符串
+	ret, err := simplifiedchinese.GBK.NewEncoder().String(str)
+	if err != nil {
+		return "" //如果转换失败返回空字符串
+	}
+	return ret
 
-// }
+}
 
-// func ConvertGBK2Str(gbkStr string) string {
-// 	//将GBK编码的字符串转换为utf-8编码
-// 	// ret, err := simplifiedchinese.GBK.NewDecoder().String(gbkStr)
-// 	// return ret //如果转换失败返回空字符串
+func ConvertBytes_from_UTF8_to_GBK(b []byte) string {
 
-// 	//如果是[]byte格式的字符串，可以使用Bytes方法
-// 	b, err := simplifiedchinese.GBK.NewDecoder().Bytes([]byte(gbkStr))
-// 	return string(b)
-// }
+	//[]byte格式的字符串
+	bytes, err := simplifiedchinese.GBK.NewEncoder().Bytes(b)
+	if err != nil {
+		return "" //如果转换失败返回空字符串
+	}
+	return string(bytes)
 
-func convertGbkToUtf8(b []byte) string {
-	s, _ := simplifiedchinese.GBK.NewDecoder().Bytes(b)
-	return string(s)
+}
+
+func ConvertString_from_GBK_to_UTF8(str string) string {
+
+	//GBK编码的字符串
+	ret, err := simplifiedchinese.GBK.NewDecoder().String(str)
+	if err != nil {
+		return "" //如果转换失败返回空字符串
+	}
+	return ret
+
+} */
+
+func ConvertBytes_from_GBK_to_UTF8(b []byte) string {
+
+	//[]byte格式的字符串
+	bytes, err := simplifiedchinese.GBK.NewDecoder().Bytes(b)
+	if err != nil {
+		return "" //如果转换失败返回空字符串
+	}
+	return string(bytes)
+
 }
