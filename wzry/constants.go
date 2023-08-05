@@ -22,6 +22,9 @@ var skinSize = map[string]string{
 	"m": "mobile",
 }
 
+// 获取皮肤图片保存位置（根路径）
+// 如果提供 savepath.txt 文件，并且内容是路径，则返回该路径（不检查是否存在）
+// 否则返回当前目录下的 wzry-skin
 func getSaveRoot() string {
 	savePathFile := "savepath.txt"
 	if exists(savePathFile) {
