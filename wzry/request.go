@@ -29,13 +29,3 @@ func getPage(ename int) (string, error) {
 
 	return html, nil
 }
-
-// 请求皮肤图片并保存在指定路径
-func getSkin(url string, path string) (bool, error) {
-	bytes, err := getBytes(url)
-	if err != nil {
-		return false, err
-	}
-
-	return writeBytes(bytes, path)
-}

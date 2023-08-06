@@ -9,7 +9,12 @@ type Hero struct {
 }
 
 type Chan1 struct {
-	hero         Hero
-	heroSavePath string
-	skins        []string
+	hero  Hero
+	path  string
+	skins []string
+}
+
+type Chan2 struct {
+	content []byte
+	path    string
 }

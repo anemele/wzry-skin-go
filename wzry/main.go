@@ -57,11 +57,15 @@ func Run() (bool, error) {
 	// 2. 前面不用 close 或者用 defer close 会导致卡死，原因不知
 	// 最终选择有限循环读取。
 	// for ch1 := range chan1 {
+
+	chan2 := make(chan Chan2, 1024)
+	count := 0
+
 	numHero := len(heros)
 	for i := 0; i < numHero; i++ {
 		ch1 := <-chan1
 		hero := ch1.hero
-		heroSavePath := ch1.heroSavePath
+		heroSavePath := ch1.path
 		skins := ch1.skins
 		// fmt.Println(skins)
 		// fmt.Println(hero)
@@ -83,14 +87,15 @@ func Run() (bool, error) {
 					continue
 				}
 				skinImageUrl := getImageUrl(hero.ename, i+lenStat+1, skinSize["b"])
-				go func() {
-					ok, err := getSkin(skinImageUrl, skinSavePath)
-					if ok {
-						logInfo("SAVED", skinSavePath)
+				go func(url, path string) {
+					bytes, err := getBytes(url)
+					if err == nil {
+						chan2 <- Chan2{bytes, path}
+						count += 1
 					} else {
 						log.Println(err)
 					}
-				}()
+				}(skinImageUrl, skinSavePath)
 			}
 			statistics[hero.cname] = lenSkin
 		} else if lenStat > lenSkin {
@@ -100,6 +105,18 @@ func Run() (bool, error) {
 			statistics[hero.cname] = lenSkin
 		}
 		// 如果二者相等，说明没有更新，也没有错误，无需操作
+	}
+
+	for i := 0; i < count; i++ {
+		ch2 := <-chan2
+		bytes := ch2.content
+		path := ch2.path
+		ok, err := writeBytes(bytes, path)
+		if ok {
+			logInfo("SAVED", path)
+		} else {
+			log.Println(err)
+		}
 	}
 
 	setStat(statistics)
