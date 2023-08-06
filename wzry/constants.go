@@ -3,6 +3,7 @@ package wzry
 import (
 	"fmt"
 	"os"
+	"strings"
 )
 
 /* API 相关 */
@@ -34,7 +35,7 @@ func getSaveRoot() string {
 	if exists(savePathFile) {
 		content, err := os.ReadFile(savePathFile)
 		if err == nil {
-			saveRoot := string(content)
+			saveRoot := strings.TrimSpace(string(content))
 			return mkDir(saveRoot)
 		}
 	}
