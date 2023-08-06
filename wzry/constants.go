@@ -27,15 +27,19 @@ var skinSize = map[string]string{
 /* 获取保存位置（根路径）
 如果提供 savepath.txt 文件，并且内容是路径，则返回该路径（不检查是否存在）
 否则返回默认路径（./wzry-skin） */
+var savePathFile = "savepath.txt"
+var defaultSavePath = "./wzry-skin"
+
 func getSaveRoot() string {
-	savePathFile := "savepath.txt"
 	if exists(savePathFile) {
-		saveRoot, err := os.ReadFile(savePathFile)
+		content, err := os.ReadFile(savePathFile)
 		if err == nil {
-			return string(saveRoot)
+			saveRoot := string(content)
+			return mkDir(saveRoot)
 		}
 	}
-	return "./wzry-skin"
+
+	return mkDir(defaultSavePath)
 }
 
 var saveRoot = getSaveRoot()

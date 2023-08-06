@@ -2,19 +2,20 @@ package wzry
 
 import (
 	"encoding/json"
-	"fmt"
 	"strings"
 
 	"github.com/antchfx/htmlquery"
 )
 
-func parseJson(data []byte) []Hero {
+// 解析 herolist 文件，转换成 Hero 列表
+// herolist 是字节流形式的 JSON
+func parseJson(data []byte) ([]Hero, error) {
+	// 由于键值类型不定，需要用 interface{} 类型
 	herolist := new([]map[string]interface{})
 
 	err := json.Unmarshal(data, &herolist)
 	if err != nil {
-		fmt.Println(err)
-		return nil
+		return nil, err
 	}
 	// fmt.Println(herolist)
 
@@ -35,12 +36,18 @@ func parseJson(data []byte) []Hero {
 	// 	fmt.Println(v.cname)
 	// }
 
-	return ret
+	return ret, nil
 }
 
-func parseHtml(html string) string {
-	root, _ := htmlquery.Parse(strings.NewReader(html))
+// 解析每个英雄页面的 HTML ，返回皮肤列表
+func parseHtml(html string) ([]string, error) {
+	root, err := htmlquery.Parse(strings.NewReader(html))
+	if err != nil {
+		return nil, err
+	}
+
 	ul := htmlquery.FindOne(root, "//div[@class=\"pic-pf\"]/ul")
 	skins := htmlquery.SelectAttr(ul, "data-imgname")
-	return skins
+
+	return splitSkin(skins), nil
 }

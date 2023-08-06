@@ -32,7 +32,7 @@ func getStat() (map[string]int, error) {
 		x := strings.Split(string(line), ":")
 		if len(x) == 2 {
 			num, err := strconv.Atoi(x[1])
-			if err == nil {
+			if err == nil && num >= 0 {
 				ret[x[0]] = num
 			}
 		}
