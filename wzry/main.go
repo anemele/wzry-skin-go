@@ -7,7 +7,7 @@ import (
 )
 
 func Run() (bool, error) {
-	// 请求 heros 获取 []Hero
+	// 获取 []Hero
 	heros, err := getData()
 	if err != nil {
 		return false, err
@@ -19,6 +19,11 @@ func Run() (bool, error) {
 		return false, err
 	}
 
+	// channel
+	// size 是随便设置的
+	chan1 := make(chan Chan1, 1024)
+	// defer close(chan1)
+
 	// 遍历英雄列表
 	for _, hero := range heros {
 		// 创建该英雄的存储目录
@@ -26,19 +31,42 @@ func Run() (bool, error) {
 		heroSavePath := path.Join(saveRoot, heroTN)
 		mkDir(heroSavePath)
 
-		// 请求英雄页面
-		html, err := getPage(hero.ename)
-		if err != nil {
-			log.Panicln(err)
-			continue
-		}
+		go func(hero Hero) {
+			// 请求英雄页面
+			html, err := getPage(hero.ename)
+			if err != nil {
+				log.Panicln(err)
+				return
+			}
 
-		// 解析英雄页面，获取皮肤列表
-		skins, err := parseHtml(html)
-		if err != nil {
-			log.Println(err)
-			continue
-		}
+			// 解析英雄页面，获取皮肤列表
+			skins, err := parseHtml(html)
+			if err != nil {
+				log.Println(err)
+				return
+			}
+
+			chan1 <- Chan1{hero, heroSavePath, skins}
+		}(hero)
+	}
+	// close(chan1)
+
+	// TODO 230806
+	// 这里使用 range 读取 chan 会出现一系列问题
+	// 1. 前面用 close 会直接跳过 range chan
+	// 2. 前面不用 close 或者用 defer close 会导致卡死，原因不知
+	// 最终选择有限循环读取。
+	// for ch1 := range chan1 {
+	numHero := len(heros)
+	for i := 0; i < numHero; i++ {
+		ch1 := <-chan1
+		hero := ch1.hero
+		heroSavePath := ch1.heroSavePath
+		skins := ch1.skins
+		// fmt.Println(skins)
+		// fmt.Println(hero)
+		// fmt.Println(heroSavePath)
+		// continue
 
 		// 截取皮肤列表，更新统计信息
 		lenSkin := len(skins)
@@ -55,12 +83,14 @@ func Run() (bool, error) {
 					continue
 				}
 				skinImageUrl := getImageUrl(hero.ename, i+lenStat+1, skinSize["b"])
-				code, err := getSkin(skinImageUrl, skinSavePath)
-				if code {
-					logInfo("SAVED", skinSavePath)
-				} else {
-					log.Println(err)
-				}
+				go func() {
+					ok, err := getSkin(skinImageUrl, skinSavePath)
+					if ok {
+						logInfo("SAVED", skinSavePath)
+					} else {
+						log.Println(err)
+					}
+				}()
 			}
 			statistics[hero.cname] = lenSkin
 		} else if lenStat > lenSkin {
@@ -71,6 +101,7 @@ func Run() (bool, error) {
 		}
 		// 如果二者相等，说明没有更新，也没有错误，无需操作
 	}
+
 	setStat(statistics)
 
 	log.Println("DONE")

@@ -7,3 +7,9 @@ type Hero struct {
 	ename int
 	title string
 }
+
+type Chan1 struct {
+	hero         Hero
+	heroSavePath string
+	skins        []string
+}
