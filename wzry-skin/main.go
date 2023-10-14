@@ -8,13 +8,13 @@ import (
 
 func Run() (bool, error) {
 	// 获取 []Hero
-	heros, err := getData()
+	heros, err := GetData()
 	if err != nil {
 		return false, err
 	}
 
 	// 获取本地统计信息 statistics.txt
-	statistics, err := getStat()
+	statistics, err := GetStat()
 	if err != nil {
 		return false, err
 	}
@@ -28,19 +28,19 @@ func Run() (bool, error) {
 	for _, hero := range heros {
 		// 创建该英雄的存储目录
 		heroTN := hero.cname + "_" + hero.title
-		heroSavePath := path.Join(saveRoot, heroTN)
-		mkDir(heroSavePath)
+		heroSavePath := path.Join(SaveRoot, heroTN)
+		MkDir(heroSavePath)
 
 		go func(hero Hero) {
 			// 请求英雄页面
-			html, err := getPage(hero.ename)
+			html, err := GetPage(hero.ename)
 			if err != nil {
 				log.Panicln(err)
 				return
 			}
 
 			// 解析英雄页面，获取皮肤列表
-			skins, err := parseHtml(html)
+			skins, err := ParseHtml(html)
 			if err != nil {
 				log.Println(err)
 				return
@@ -82,13 +82,13 @@ func Run() (bool, error) {
 			for i, skin := range skins[lenStat:] {
 				skinFileName := fmt.Sprintf("%d_%s.jpg", i+lenStat+1, skin)
 				skinSavePath := path.Join(heroSavePath, skinFileName)
-				if exists(skinSavePath) {
-					logInfo("EXISTS", skinSavePath)
+				if Exists(skinSavePath) {
+					LogInfo("EXISTS", skinSavePath)
 					continue
 				}
-				skinImageUrl := getImageUrl(hero.ename, i+lenStat+1, skinSize["b"])
+				skinImageUrl := GetImageUrl(hero.ename, i+lenStat+1, SkinSize["b"])
 				go func(url, path string) {
-					bytes, err := getBytes(url)
+					bytes, err := GetBytes(url)
 					if err == nil {
 						chan2 <- Chan2{bytes, path}
 						count += 1
@@ -111,15 +111,15 @@ func Run() (bool, error) {
 		ch2 := <-chan2
 		bytes := ch2.content
 		path := ch2.path
-		ok, err := writeBytes(bytes, path)
+		ok, err := WriteBytes(bytes, path)
 		if ok {
-			logInfo("SAVED", path)
+			LogInfo("SAVED", path)
 		} else {
 			log.Println(err)
 		}
 	}
 
-	setStat(statistics)
+	SetStat(statistics)
 
 	log.Println("DONE")
 	return true, nil

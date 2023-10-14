@@ -9,14 +9,14 @@ import (
 	"strings"
 )
 
-func getStat() (map[string]int, error) {
+func GetStat() (map[string]int, error) {
 	ret := make(map[string]int)
 
-	if !exists(statFile) {
+	if !Exists(StatFile) {
 		return ret, nil
 	}
 
-	file, err := os.Open(statFile)
+	file, err := os.Open(StatFile)
 	if err != nil {
 		return nil, err
 	}
@@ -40,12 +40,12 @@ func getStat() (map[string]int, error) {
 	return ret, nil
 }
 
-func setStat(data map[string]int) (bool, error) {
+func SetStat(data map[string]int) (bool, error) {
 	if data == nil {
 		return false, nil
 	}
 
-	file, err := os.OpenFile(statFile, os.O_WRONLY|os.O_CREATE, 0o666)
+	file, err := os.OpenFile(StatFile, os.O_WRONLY|os.O_CREATE, 0o666)
 	if err != nil {
 		return false, err
 	}

@@ -9,7 +9,7 @@ import (
 
 // 解析 herolist 文件，转换成 Hero 列表
 // herolist 是字节流形式的 JSON
-func parseJson(data []byte) ([]Hero, error) {
+func ParseJson(data []byte) ([]Hero, error) {
 	// 由于键值类型不定，需要用 interface{} 类型
 	herolist := new([]map[string]interface{})
 
@@ -40,7 +40,7 @@ func parseJson(data []byte) ([]Hero, error) {
 }
 
 // 解析每个英雄页面的 HTML ，返回皮肤列表
-func parseHtml(html string) ([]string, error) {
+func ParseHtml(html string) ([]string, error) {
 	root, err := htmlquery.Parse(strings.NewReader(html))
 	if err != nil {
 		return nil, err
@@ -49,5 +49,5 @@ func parseHtml(html string) ([]string, error) {
 	ul := htmlquery.FindOne(root, "//div[@class=\"pic-pf\"]/ul")
 	skins := htmlquery.SelectAttr(ul, "data-imgname")
 
-	return splitSkin(skins), nil
+	return SplitSkin(skins), nil
 }

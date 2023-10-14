@@ -33,8 +33,8 @@ var client *http.Client = &http.Client{}
 // 	return ret
 // }
 
-func getBytes(url string) ([]byte, error) {
-	logInfo("GET", url)
+func GetBytes(url string) ([]byte, error) {
+	LogInfo("GET", url)
 
 	req, _ := http.NewRequest("GET", url, nil)
 	req.Header.Set("User-Agent", "Mozilla/4.0 (compatible; MSIE 6.0; Windows NT 5.1)")
@@ -58,7 +58,7 @@ func getBytes(url string) ([]byte, error) {
 	return body, nil
 }
 
-func writeBytes(bytes []byte, path string) (bool, error) {
+func WriteBytes(bytes []byte, path string) (bool, error) {
 	file, err := os.Create(path)
 	if err != nil {
 		return false, err

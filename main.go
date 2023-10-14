@@ -1,7 +1,7 @@
 package main
 
 import (
-	"wzry-skin/wzry"
+	"wzry"
 )
 
 func main() {

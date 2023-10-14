@@ -6,20 +6,20 @@ import (
 	"regexp"
 )
 
-func exists(path string) bool {
+func Exists(path string) bool {
 	_, err := os.Stat(path)
 	return err == nil
 }
 
-func mkDir(path string) string {
-	if !exists(path) {
+func MkDir(path string) string {
+	if !Exists(path) {
 		os.Mkdir(path, os.ModePerm)
-		logInfo("MKDIR", path)
+		LogInfo("MKDIR", path)
 	}
 	return path
 }
 
-func splitSkin(skins string) []string {
+func SplitSkin(skins string) []string {
 	re, _ := regexp.Compile(`(\S+?)[\s(?:&\d+)\|]+`)
 	matches := re.FindAllStringSubmatch(skins, -1)
 	ret := make([]string, len(matches))
@@ -29,6 +29,6 @@ func splitSkin(skins string) []string {
 	return ret
 }
 
-func logInfo(action string, message string) {
+func LogInfo(action string, message string) {
 	log.Printf("%-8s%s\n", action, message)
 }
