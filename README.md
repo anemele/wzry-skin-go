@@ -1,5 +1,4 @@
-# Golang crawler
+# Golang crawler for wzry skin pictures
 
-TODO
-
-use goroutine
+Use goroutine to concurrently and incrementall download
+hero pictures from [wzry](pvp.qq.com).
