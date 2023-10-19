@@ -9,30 +9,6 @@ import (
 
 var client *http.Client = &http.Client{}
 
-// func aioGet(urls chan string) chan []string {
-// 	ret := make(chan []string)
-
-// 	go func() {
-
-// 		wg := &sync.WaitGroup{}
-// 		for url := range urls {
-// 			wg.Add(1)
-// 			go func(url string, group *sync.WaitGroup) {
-// 				body := getBytes(url)
-// 				html := convertGbkToUtf8(body)
-// 				skins := parseHtml(html)
-// 				skinList := splitSkin(skins)
-// 				ret <- skinList
-
-// 				group.Done()
-// 			}(url, wg)
-// 		}
-// 		wg.Wait()
-// 	}()
-
-// 	return ret
-// }
-
 func GetBytes(url string) ([]byte, error) {
 	LogInfo("GET", url)
 

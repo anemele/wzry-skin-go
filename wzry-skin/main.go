@@ -8,8 +8,10 @@ import (
 )
 
 // size 是随便设置的
-var chan1 = make(chan Chan1, 1024)
-var chan2 = make(chan Chan2, 1024)
+const size = 256
+
+var chan1 = make(chan Chan1, size)
+var chan2 = make(chan Chan2, size)
 
 func getHeroPage(wg *sync.WaitGroup, hero Hero) {
 	defer wg.Done()
@@ -21,7 +23,7 @@ func getHeroPage(wg *sync.WaitGroup, hero Hero) {
 	// 请求英雄页面
 	html, err := GetPage(hero.ename)
 	if err != nil {
-		log.Panicln(err)
+		log.Println(err)
 		return
 	}
 
@@ -71,8 +73,8 @@ func Run(wg *sync.WaitGroup) (bool, error) {
 	}
 
 	// 遍历英雄列表
+	wg.Add(len(heros))
 	for _, hero := range heros {
-		wg.Add(1)
 		go getHeroPage(wg, hero)
 	}
 
@@ -112,16 +114,15 @@ func Run(wg *sync.WaitGroup) (bool, error) {
 		// 如果二者相等，说明没有更新，也没有错误，无需操作
 	}
 
-	// fmt.Println(count)
-
+	wg.Add(count)
 	for i := 0; i < count; i++ {
 		ch2 := <-chan2
-		wg.Add(1)
 		go saveSkin(wg, ch2.content, ch2.path)
 	}
 
 	wg.Wait()
 	SetStat(statistics)
 	log.Println("DONE")
+
 	return true, nil
 }

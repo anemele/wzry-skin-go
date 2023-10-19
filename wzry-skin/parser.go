@@ -17,24 +17,15 @@ func ParseJson(data []byte) ([]Hero, error) {
 	if err != nil {
 		return nil, err
 	}
-	// fmt.Println(herolist)
 
 	ret := make([]Hero, 0)
 	for _, hero := range *herolist {
-		// fmt.Println(index, hero)
-		// for key, val := range hero {
-		// 	fmt.Println(key, val)
-		// }
 		ret = append(ret, Hero{
 			hero["cname"].(string),
 			int(hero["ename"].(float64)),
 			hero["title"].(string),
 		})
 	}
-
-	// for _, v := range ret {
-	// 	fmt.Println(v.cname)
-	// }
 
 	return ret, nil
 }
