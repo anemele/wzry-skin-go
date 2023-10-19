@@ -2,7 +2,6 @@ package wzry
 
 import (
 	"fmt"
-	"os"
 	"strings"
 )
 
@@ -24,20 +23,20 @@ var SkinSize = map[string]string{
 	"m": "mobile",
 }
 
+// 配置文件
+var ConfigFile = "config.ini"
+var ConfigKey = []string{"savepath"}
+
 /* 路径相关 */
 /* 获取保存位置（根路径）
 如果提供 savepath.txt 文件，并且内容是路径，则返回该路径（不检查是否存在）
 否则返回默认路径（./wzry-skin） */
-var savePathFile = "savepath.txt"
 var defaultSavePath = "./wzry-skin"
 
 func getSaveRoot() string {
-	if Exists(savePathFile) {
-		content, err := os.ReadFile(savePathFile)
-		if err == nil {
-			saveRoot := strings.TrimSpace(string(content))
-			return MkDir(saveRoot)
-		}
+	savePath := strings.TrimSpace(Config["savepath"])
+	if savePath != "" {
+		return MkDir(savePath)
 	}
 
 	return MkDir(defaultSavePath)
