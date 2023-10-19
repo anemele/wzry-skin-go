@@ -1,9 +1,12 @@
 package main
 
 import (
+	"sync"
 	"wzry"
 )
 
 func main() {
-	wzry.Run()
+	var wg sync.WaitGroup
+	wzry.Run(&wg)
+	wg.Wait()
 }
