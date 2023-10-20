@@ -18,7 +18,7 @@ func GetStat() (map[string]int, error) {
 
 	file, err := os.Open(StatFile)
 	if err != nil {
-		return nil, err
+		return ret, err
 	}
 	defer file.Close()
 
