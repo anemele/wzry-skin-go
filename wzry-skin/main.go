@@ -59,23 +59,25 @@ func saveSkin(wg *sync.WaitGroup, bytes []byte, path string) {
 	}
 }
 
-func Run(wg *sync.WaitGroup) (bool, error) {
+func Run() error {
 	// 获取 []Hero
 	heros, err := GetData()
 	if err != nil {
-		return false, err
+		return err
 	}
 
 	// 获取本地统计信息 statistics.txt
 	statistics, err := GetStat()
 	if err != nil {
-		return false, err
+		return err
 	}
 
+	// 创建同步锁
+	var wg sync.WaitGroup
 	// 遍历英雄列表
 	wg.Add(len(heros))
 	for _, hero := range heros {
-		go getHeroPage(wg, hero)
+		go getHeroPage(&wg, hero)
 	}
 
 	count := 0
@@ -101,7 +103,7 @@ func Run(wg *sync.WaitGroup) (bool, error) {
 				}
 				skinImageUrl := GetImageUrl(hero.ename, i+lenStat+1, SkinSize["b"])
 				wg.Add(1)
-				go getSkinBytes(wg, skinImageUrl, skinSavePath)
+				go getSkinBytes(&wg, skinImageUrl, skinSavePath)
 				count++
 			}
 			statistics[hero.cname] = lenSkin
@@ -117,12 +119,12 @@ func Run(wg *sync.WaitGroup) (bool, error) {
 	wg.Add(count)
 	for i := 0; i < count; i++ {
 		ch2 := <-chan2
-		go saveSkin(wg, ch2.content, ch2.path)
+		go saveSkin(&wg, ch2.content, ch2.path)
 	}
 
 	wg.Wait()
 	SetStat(statistics)
 	log.Println("DONE")
 
-	return true, nil
+	return nil
 }
