@@ -72,54 +72,66 @@ func Run() error {
 		return err
 	}
 
-	// 创建同步锁
-	var wg sync.WaitGroup
 	// 遍历英雄列表
-	wg.Add(len(heros))
-	for _, hero := range heros {
-		go getHeroPage(&wg, hero)
-	}
-
-	count := 0
-	for i := 0; i < len(heros); i++ {
-		ch1 := <-chan1
-		hero := ch1.hero
-		heroSavePath := ch1.path
-		skins := ch1.skins
-
-		// 截取皮肤列表，更新统计信息
-		lenSkin := len(skins)
-		lenStat := statistics[hero.cname]
-		// 比对皮肤列表长度和统计信息
-		if lenStat < lenSkin {
-			// 统计信息记录小于皮肤列表长度，说明有更新
-			// 则截取更新部分送入下载，并更新统计信息记录
-			for i, skin := range skins[lenStat:] {
-				skinFileName := fmt.Sprintf("%d_%s.jpg", i+lenStat+1, skin)
-				skinSavePath := path.Join(heroSavePath, skinFileName)
-				if Exists(skinSavePath) {
-					LogInfo("EXISTS", skinSavePath)
-					continue
-				}
-				skinImageUrl := GetImageUrl(hero.ename, i+lenStat+1, SkinSize["b"])
-				wg.Add(1)
-				go getSkinBytes(&wg, skinImageUrl, skinSavePath)
-				count++
-			}
-			statistics[hero.cname] = lenSkin
-		} else if lenStat > lenSkin {
-			// 统计信息记录大于皮肤列表长度，说明记录存在错误
-			// （也可能是请求的皮肤数据错误或解析错误，可能性较小）
-			// 仅更正统计信息记录
-			statistics[hero.cname] = lenSkin
+	go func() {
+		// 创建同步锁
+		wg := &sync.WaitGroup{}
+		defer close(chan1)
+		wg.Add(len(heros))
+		for _, hero := range heros {
+			go getHeroPage(wg, hero)
 		}
-		// 如果二者相等，说明没有更新，也没有错误，无需操作
-	}
+		wg.Wait()
+	}()
 
-	wg.Add(count)
-	for i := 0; i < count; i++ {
-		ch2 := <-chan2
-		go saveSkin(&wg, ch2.content, ch2.path)
+	// 遍历皮肤列表
+	go func() {
+		// 创建同步锁
+		wg := &sync.WaitGroup{}
+		defer close(chan2)
+
+		for ch1 := range chan1 {
+			hero := ch1.hero
+			heroSavePath := ch1.path
+			skins := ch1.skins
+
+			// 截取皮肤列表，更新统计信息
+			lenSkin := len(skins)
+			lenStat := statistics[hero.cname]
+			// 比对皮肤列表长度和统计信息
+			if lenStat < lenSkin {
+				// 统计信息记录小于皮肤列表长度，说明有更新
+				// 则截取更新部分送入下载，并更新统计信息记录
+				for i, skin := range skins[lenStat:] {
+					skinFileName := fmt.Sprintf("%d_%s.jpg", i+lenStat+1, skin)
+					skinSavePath := path.Join(heroSavePath, skinFileName)
+					if Exists(skinSavePath) {
+						LogInfo("EXISTS", skinSavePath)
+						continue
+					}
+					skinImageUrl := GetImageUrl(hero.ename, i+lenStat+1, SkinSize["b"])
+					wg.Add(1)
+					go getSkinBytes(wg, skinImageUrl, skinSavePath)
+
+				}
+				statistics[hero.cname] = lenSkin
+			} else if lenStat > lenSkin {
+				// 统计信息记录大于皮肤列表长度，说明记录存在错误
+				// （也可能是请求的皮肤数据错误或解析错误，可能性较小）
+				// 仅更正统计信息记录
+				statistics[hero.cname] = lenSkin
+			}
+			// 如果二者相等，说明没有更新，也没有错误，无需操作
+
+		}
+		wg.Wait()
+	}()
+
+	// 创建同步锁
+	wg := &sync.WaitGroup{}
+	for ch2 := range chan2 {
+		wg.Add(1)
+		go saveSkin(wg, ch2.content, ch2.path)
 	}
 
 	wg.Wait()
