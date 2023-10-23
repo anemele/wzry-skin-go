@@ -7,13 +7,7 @@ import (
 	"sync"
 )
 
-// size 是随便设置的
-const size = 256
-
-var chan1 = make(chan Chan1, size)
-var chan2 = make(chan Chan2, size)
-
-func getHeroPage(wg *sync.WaitGroup, hero Hero) {
+func getHeroPage(wg *sync.WaitGroup, chan1 chan Chan1, hero Hero) {
 	defer wg.Done()
 
 	// 创建该英雄的存储目录
@@ -37,7 +31,7 @@ func getHeroPage(wg *sync.WaitGroup, hero Hero) {
 	chan1 <- Chan1{hero, heroSavePath, skins}
 }
 
-func getSkinBytes(wg *sync.WaitGroup, url, path string) {
+func getSkinBytes(wg *sync.WaitGroup, chan2 chan Chan2, url, path string) {
 	defer wg.Done()
 
 	bytes, err := GetBytes(url)
@@ -72,6 +66,12 @@ func Run() error {
 		return err
 	}
 
+	// size 是随便设置的
+	const size = 256
+
+	var chan1 = make(chan Chan1, size)
+	var chan2 = make(chan Chan2, size)
+
 	// 遍历英雄列表
 	go func() {
 		// 创建同步锁
@@ -79,7 +79,7 @@ func Run() error {
 		defer close(chan1)
 		wg.Add(len(heros))
 		for _, hero := range heros {
-			go getHeroPage(wg, hero)
+			go getHeroPage(wg, chan1, hero)
 		}
 		wg.Wait()
 	}()
@@ -111,7 +111,7 @@ func Run() error {
 					}
 					skinImageUrl := GetImageUrl(hero.ename, i+lenStat+1, SkinSize["b"])
 					wg.Add(1)
-					go getSkinBytes(wg, skinImageUrl, skinSavePath)
+					go getSkinBytes(wg, chan2, skinImageUrl, skinSavePath)
 
 				}
 				statistics[hero.cname] = lenSkin
