@@ -44,6 +44,7 @@ func ConvertBytes_from_GBK_to_UTF8(b []byte) string {
 	//[]byte格式的字符串
 	bytes, err := simplifiedchinese.GBK.NewDecoder().Bytes(b)
 	if err != nil {
+		Logger.Error(err.Error())
 		return "" //如果转换失败返回空字符串
 	}
 	return string(bytes)

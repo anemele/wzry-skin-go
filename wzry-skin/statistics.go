@@ -18,6 +18,7 @@ func GetStat() (map[string]int, error) {
 
 	file, err := os.Open(StatFile)
 	if err != nil {
+		Logger.Error(err.Error())
 		return ret, err
 	}
 	defer file.Close()
@@ -47,6 +48,7 @@ func SetStat(data map[string]int) (bool, error) {
 
 	file, err := os.OpenFile(StatFile, os.O_WRONLY|os.O_CREATE, 0o666)
 	if err != nil {
+		Logger.Error(err.Error())
 		return false, err
 	}
 	defer file.Close()
@@ -57,7 +59,7 @@ func SetStat(data map[string]int) (bool, error) {
 		content := fmt.Sprintf("%s:%d\n", key, val)
 		_, err := writer.WriteString(content)
 		if err != nil {
-			fmt.Println(err)
+			Logger.Error(err.Error())
 		}
 	}
 	ret := writer.Flush()

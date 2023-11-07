@@ -8,6 +8,7 @@ import (
 func GetData() ([]Hero, error) {
 	bytes, err := GetBytes(ApiDataUrl)
 	if err != nil {
+		Logger.Error(err.Error())
 		return nil, err
 	}
 	if bytes == nil {
@@ -22,6 +23,7 @@ func GetPage(ename int) (string, error) {
 	heroPageUrl := GetPageUrl(ename)
 	pageBytes, err := GetBytes(heroPageUrl)
 	if err != nil {
+		Logger.Error(err.Error())
 		return "", err
 	}
 

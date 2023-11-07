@@ -2,7 +2,6 @@ package wzry
 
 import (
 	"fmt"
-	"log"
 	"path"
 	"sync"
 )
@@ -17,14 +16,14 @@ func getHeroPage(wg *sync.WaitGroup, chan1 chan Chan1, hero Hero) {
 	// 请求英雄页面
 	html, err := GetPage(hero.ename)
 	if err != nil {
-		log.Println(err)
+		Logger.Error(err.Error())
 		return
 	}
 
 	// 解析英雄页面，获取皮肤列表
 	skins, err := ParseHtml(html)
 	if err != nil {
-		log.Println(err)
+		Logger.Error(err.Error())
 		return
 	}
 
@@ -38,7 +37,7 @@ func getSkinBytes(wg *sync.WaitGroup, chan2 chan Chan2, url, path string) {
 	if err == nil {
 		chan2 <- Chan2{bytes, path}
 	} else {
-		log.Println(err)
+		Logger.Error(err.Error())
 	}
 }
 
@@ -47,9 +46,9 @@ func saveSkin(wg *sync.WaitGroup, bytes []byte, path string) {
 
 	ok, err := WriteBytes(bytes, path)
 	if ok {
-		LogInfo("SAVED", path)
+		Logger.Info("SAVE", "path", path)
 	} else {
-		log.Println(err)
+		Logger.Error(err.Error())
 	}
 }
 
@@ -57,12 +56,14 @@ func Run() error {
 	// 获取 []Hero
 	heros, err := GetData()
 	if err != nil {
+		Logger.Error(err.Error())
 		return err
 	}
 
 	// 获取本地统计信息 statistics.txt
 	statistics, err := GetStat()
 	if err != nil {
+		Logger.Error(err.Error())
 		return err
 	}
 
@@ -106,7 +107,7 @@ func Run() error {
 					skinFileName := fmt.Sprintf("%d_%s.jpg", i+lenStat+1, skin)
 					skinSavePath := path.Join(heroSavePath, skinFileName)
 					if Exists(skinSavePath) {
-						LogInfo("EXISTS", skinSavePath)
+						Logger.Warn("EXIST", "", skinSavePath)
 						continue
 					}
 					skinImageUrl := GetImageUrl(hero.ename, i+lenStat+1, SkinSize["b"])
@@ -136,7 +137,7 @@ func Run() error {
 
 	wg.Wait()
 	SetStat(statistics)
-	log.Println("DONE")
+	Logger.Info("DONE!")
 
 	return nil
 }

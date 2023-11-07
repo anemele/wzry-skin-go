@@ -1,8 +1,6 @@
 package wzry
 
 import (
-	"log"
-
 	"github.com/go-ini/ini"
 )
 
@@ -13,7 +11,7 @@ func getConfig() map[string]string {
 	}
 	cfg, err := ini.Load(ConfigFile)
 	if err != nil {
-		log.Println(err)
+		Logger.Error(err.Error())
 		return ret
 
 	}

@@ -11,10 +11,11 @@ import (
 // herolist 是字节流形式的 JSON
 func ParseJson(data []byte) ([]Hero, error) {
 	// 由于键值类型不定，需要用 interface{} 类型
-	herolist := new([]map[string]interface{})
+	herolist := new([]map[string]any)
 
 	err := json.Unmarshal(data, &herolist)
 	if err != nil {
+		Logger.Error(err.Error())
 		return nil, err
 	}
 
@@ -34,6 +35,7 @@ func ParseJson(data []byte) ([]Hero, error) {
 func ParseHtml(html string) ([]string, error) {
 	root, err := htmlquery.Parse(strings.NewReader(html))
 	if err != nil {
+		Logger.Error(err.Error())
 		return nil, err
 	}
 

@@ -1,7 +1,6 @@
 package wzry
 
 import (
-	"log"
 	"os"
 	"regexp"
 )
@@ -14,7 +13,7 @@ func Exists(path string) bool {
 func MkDir(path string) string {
 	if !Exists(path) {
 		os.Mkdir(path, os.ModePerm)
-		LogInfo("MKDIR", path)
+		Logger.Info("MKDIR", "path", path)
 	}
 	return path
 }
@@ -27,8 +26,4 @@ func SplitSkin(skins string) []string {
 		ret[i] = match[1]
 	}
 	return ret
-}
-
-func LogInfo(action string, message string) {
-	log.Printf("%-8s%s\n", action, message)
 }
