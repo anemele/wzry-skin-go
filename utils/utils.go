@@ -1,9 +1,12 @@
-package wzry
+package utils
 
 import (
+	"log/slog"
 	"os"
 	"regexp"
 )
+
+var logger = slog.Default()
 
 func Exists(path string) bool {
 	_, err := os.Stat(path)
@@ -13,7 +16,7 @@ func Exists(path string) bool {
 func MkDir(path string) string {
 	if !Exists(path) {
 		os.Mkdir(path, os.ModePerm)
-		Logger.Info("MKDIR", "path", path)
+		logger.Info("MKDIR", "path", path)
 	}
 	return path
 }

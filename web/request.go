@@ -1,14 +1,15 @@
-package wzry
+package web
 
 import (
+	"consts"
 	"errors"
 )
 
 // 请求 herolist.json ，解析转换返回 Hero 列表
 func GetData() ([]Hero, error) {
-	bytes, err := GetBytes(ApiDataUrl)
+	bytes, err := GetBytes(consts.ApiDataUrl)
 	if err != nil {
-		Logger.Error(err.Error())
+		logger.Error(err.Error())
 		return nil, err
 	}
 	if bytes == nil {
@@ -20,10 +21,10 @@ func GetData() ([]Hero, error) {
 
 // 请求英雄页面，返回 HTML 字符串
 func GetPage(ename int) (string, error) {
-	heroPageUrl := GetPageUrl(ename)
+	heroPageUrl := consts.GetPageUrl(ename)
 	pageBytes, err := GetBytes(heroPageUrl)
 	if err != nil {
-		Logger.Error(err.Error())
+		logger.Error(err.Error())
 		return "", err
 	}
 

@@ -1,6 +1,9 @@
-go 1.20
+go 1.21.5
 
 use (
 	.
-	./wzry-skin
+	./consts
+	./local
+	./utils
+	./web
 )

@@ -1,24 +1,26 @@
-package wzry
+package local
 
 import (
 	"bufio"
+	"consts"
 	"fmt"
 	"io"
 	"os"
 	"strconv"
 	"strings"
+	"utils"
 )
 
 func GetStat() (map[string]int, error) {
 	ret := make(map[string]int)
 
-	if !Exists(StatFile) {
+	if !utils.Exists(consts.StatFile) {
 		return ret, nil
 	}
 
-	file, err := os.Open(StatFile)
+	file, err := os.Open(consts.StatFile)
 	if err != nil {
-		Logger.Error(err.Error())
+		logger.Error(err.Error())
 		return ret, err
 	}
 	defer file.Close()
@@ -46,9 +48,9 @@ func SetStat(data map[string]int) (bool, error) {
 		return false, nil
 	}
 
-	file, err := os.OpenFile(StatFile, os.O_WRONLY|os.O_CREATE, 0o666)
+	file, err := os.OpenFile(consts.StatFile, os.O_WRONLY|os.O_CREATE, 0o666)
 	if err != nil {
-		Logger.Error(err.Error())
+		logger.Error(err.Error())
 		return false, err
 	}
 	defer file.Close()
@@ -59,7 +61,7 @@ func SetStat(data map[string]int) (bool, error) {
 		content := fmt.Sprintf("%s:%d\n", key, val)
 		_, err := writer.WriteString(content)
 		if err != nil {
-			Logger.Error(err.Error())
+			logger.Error(err.Error())
 		}
 	}
 	ret := writer.Flush()

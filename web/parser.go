@@ -1,8 +1,9 @@
-package wzry
+package web
 
 import (
 	"encoding/json"
 	"strings"
+	"utils"
 
 	"github.com/antchfx/htmlquery"
 )
@@ -15,7 +16,7 @@ func ParseJson(data []byte) ([]Hero, error) {
 
 	err := json.Unmarshal(data, &herolist)
 	if err != nil {
-		Logger.Error(err.Error())
+		logger.Error(err.Error())
 		return nil, err
 	}
 
@@ -35,12 +36,12 @@ func ParseJson(data []byte) ([]Hero, error) {
 func ParseHtml(html string) ([]string, error) {
 	root, err := htmlquery.Parse(strings.NewReader(html))
 	if err != nil {
-		Logger.Error(err.Error())
+		logger.Error(err.Error())
 		return nil, err
 	}
 
 	ul := htmlquery.FindOne(root, "//div[@class=\"pic-pf\"]/ul")
 	skins := htmlquery.SelectAttr(ul, "data-imgname")
 
-	return SplitSkin(skins), nil
+	return utils.SplitSkin(skins), nil
 }
