@@ -1,149 +1,115 @@
 package main
 
 import (
-	"consts"
+	"encoding/json"
 	"fmt"
-	"local"
-	"log/slog"
+	"io"
+	"net/http"
+	"os"
 	"path"
+	"strings"
 	"sync"
-	"utils"
-	"web"
 )
 
-var logger = slog.Default()
+var heroUrl = "https://pvp.qq.com/web201605/js/herolist.json"
 
-func getHeroPage(wg *sync.WaitGroup, chan1 chan web.Chan1, hero web.Hero) {
-	defer wg.Done()
-
-	// 创建该英雄的存储目录
-	heroTN := hero.Cname + "_" + hero.Title
-	heroSavePath := path.Join(local.SaveRoot, heroTN)
-	utils.MkDir(heroSavePath)
-	// 请求英雄页面
-	html, err := web.GetPage(hero.Ename)
-	if err != nil {
-		logger.Error(err.Error())
-		return
-	}
-
-	// 解析英雄页面，获取皮肤列表
-	skins, err := web.ParseHtml(html)
-	if err != nil {
-		logger.Error(err.Error())
-		return
-	}
-
-	chan1 <- web.Chan1{Hero: hero, Path: heroSavePath, Skins: skins}
+type Hero struct {
+	CName string `json:"cname"`
+	EName uint   `json:"ename"`
+	Skins string `json:"skin_name"`
+	Title string `json:"title"`
 }
 
-func getSkinBytes(wg *sync.WaitGroup, chan2 chan web.Chan2, url, path string) {
-	defer wg.Done()
-
-	bytes, err := web.GetBytes(url)
-	if err == nil {
-		chan2 <- web.Chan2{Content: bytes, Path: path}
-	} else {
-		logger.Error(err.Error())
-	}
+func getSkinUrl(ename uint, sn int) string {
+	return fmt.Sprintf(
+		"http://game.gtimg.cn/images/yxzj/img201606/skin/hero-info/%d/%d-bigskin-%d.jpg",
+		ename, ename, sn,
+	)
 }
 
-func saveSkin(wg *sync.WaitGroup, bytes []byte, path string) {
-	defer wg.Done()
+var client http.Client
+var wg sync.WaitGroup
 
-	ok, err := web.WriteBytes(bytes, path)
-	if ok {
-		logger.Info("SAVE", "path", path)
-	} else {
-		logger.Error(err.Error())
-	}
+var rootDir = "wzry-skin"
+
+func exists(path string) bool {
+	var _, err = os.Stat(path)
+	return err == nil || os.IsExist(err)
 }
 
 func main() {
-	// 获取 []Hero
-	heros, err := web.GetData()
+	if !exists(rootDir) {
+		os.Mkdir(rootDir, os.ModePerm)
+	}
+
+	var res, err = client.Get(heroUrl)
 	if err != nil {
-		logger.Error(err.Error())
+		fmt.Println(err)
 		return
 	}
 
-	// 获取本地统计信息 statistics.txt
-	statistics, err := local.GetStat()
+	buf, err := io.ReadAll(res.Body)
 	if err != nil {
-		logger.Error(err.Error())
+		fmt.Println("failed to read remote data:", err)
 		return
 	}
+	// fmt.Println(buf)
 
-	// size 是随便设置的
-	const size = 256
+	var herolist []Hero
+	err = json.Unmarshal(buf, &herolist)
+	if err != nil {
+		fmt.Println("failed to parse hero data:", err)
+		return
+	}
+	// fmt.Println(herolist)
 
-	var chan1 = make(chan web.Chan1, size)
-	var chan2 = make(chan web.Chan2, size)
-
-	// 遍历英雄列表
-	go func() {
-		// 创建同步锁
-		wg := &sync.WaitGroup{}
-		defer close(chan1)
-		wg.Add(len(heros))
-		for _, hero := range heros {
-			go getHeroPage(wg, chan1, hero)
-		}
-		wg.Wait()
-	}()
-
-	// 遍历皮肤列表
-	go func() {
-		// 创建同步锁
-		wg := &sync.WaitGroup{}
-		defer close(chan2)
-
-		for ch1 := range chan1 {
-			hero := ch1.Hero
-			heroSavePath := ch1.Path
-			skins := ch1.Skins
-
-			// 截取皮肤列表，更新统计信息
-			lenSkin := len(skins)
-			lenStat := statistics[hero.Cname]
-			// 比对皮肤列表长度和统计信息
-			if lenStat < lenSkin {
-				// 统计信息记录小于皮肤列表长度，说明有更新
-				// 则截取更新部分送入下载，并更新统计信息记录
-				for i, skin := range skins[lenStat:] {
-					skinFileName := fmt.Sprintf("%d_%s.jpg", i+lenStat+1, skin)
-					skinSavePath := path.Join(heroSavePath, skinFileName)
-					if utils.Exists(skinSavePath) {
-						logger.Warn("EXIST", "", skinSavePath)
-						continue
-					}
-					skinImageUrl := consts.GetImageUrl(hero.Ename, i+lenStat+1, consts.SkinSize["b"])
-					wg.Add(1)
-					go getSkinBytes(wg, chan2, skinImageUrl, skinSavePath)
-
-				}
-				statistics[hero.Cname] = lenSkin
-			} else if lenStat > lenSkin {
-				// 统计信息记录大于皮肤列表长度，说明记录存在错误
-				// （也可能是请求的皮肤数据错误或解析错误，可能性较小）
-				// 仅更正统计信息记录
-				statistics[hero.Cname] = lenSkin
-			}
-			// 如果二者相等，说明没有更新，也没有错误，无需操作
-
-		}
-		wg.Wait()
-	}()
-
-	// 创建同步锁
-	wg := &sync.WaitGroup{}
-	for ch2 := range chan2 {
+	for _, hero := range herolist {
 		wg.Add(1)
-		go saveSkin(wg, ch2.Content, ch2.Path)
+		go processHero(hero)
 	}
 
 	wg.Wait()
-	local.SetStat(statistics)
-	logger.Info("DONE!")
+}
 
+type Data struct {
+	Bytes []byte
+	Path  string
+}
+
+var data = make(chan Data, 5)
+
+func processHero(hero Hero) {
+	var heroDir = path.Join(
+		rootDir, fmt.Sprintf("%s_%s", hero.CName, hero.Title),
+	)
+	if !exists(heroDir) {
+		os.Mkdir(heroDir, os.ModePerm)
+	}
+
+	for i, skin := range strings.Split(hero.Skins, "|") {
+		i += 1
+		url := getSkinUrl(hero.EName, i)
+		fp := path.Join(
+			heroDir,
+			fmt.Sprintf("%02d_%s.jpg", i, skin),
+		)
+
+		wg.Add(2)
+		go func() {
+			res, _ := client.Get(url)
+			buf, _ := io.ReadAll(res.Body)
+			data <- Data{buf, fp}
+			wg.Done()
+		}()
+		go func() {
+			d := <-data
+			file, _ := os.Create(d.Path)
+			defer file.Close()
+			file.Write(d.Bytes)
+			fmt.Println("done: ", d.Path)
+			wg.Done()
+		}()
+
+	}
+	wg.Done()
 }
