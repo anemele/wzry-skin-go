@@ -4,7 +4,7 @@ setlocal
 
 set dist=dist
 set target=wzry-skin
-set build=go.exe build -ldflags="-s -w"
+set build=go.exe build -ldflags="-s -w" -trimpath
 
 if "%~1" == "clean" goto lbl-clean
 if "%~1" == "windows" goto lbl-windows
@@ -30,6 +30,8 @@ exit /b
 
 :lbl-windows
 rem build for Windows
+call :lbl-cross-platform
+set GOOS=windows
 %build% -o %dist%/%target%-windows.exe
 exit /b
 
