@@ -10,6 +10,7 @@ if "%~1" == "clean" goto lbl-clean
 if "%~1" == "windows" goto lbl-windows
 if "%~1" == "linux" goto lbl-linux
 if "%~1" == "darwin" goto lbl-darwin
+if "%~1" neq "all" echo no target to build. && exit /b
 goto lbl-build
 
 :lbl-clean
